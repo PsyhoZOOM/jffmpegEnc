@@ -4,7 +4,6 @@ import com.psyhozoom.dev.jffmpeg.Classes.Database;
 import com.psyhozoom.dev.jffmpeg.Process.StreamThreads;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.time.LocalDateTime;
 
 public class Server {

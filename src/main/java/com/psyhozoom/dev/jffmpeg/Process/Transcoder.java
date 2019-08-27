@@ -3,9 +3,11 @@ package com.psyhozoom.dev.jffmpeg.Process;
 import com.psyhozoom.dev.jffmpeg.Classes.FFLog;
 import com.psyhozoom.dev.jffmpeg.Classes.Streams;
 import com.psyhozoom.dev.jffmpeg.Classes.StreamsOut;
+import com.psyhozoom.dev.jffmpeg.Classes.SystemStatus;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.SocketException;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -89,7 +91,7 @@ public class Transcoder {
     String[] splited = line.split(" ");
     for (String s : splited){
       if (s.contains("bitrate")) {
-        //System.out.println(s);
+        System.out.println(s);
         this.ffLog.setBitrate(s);
       }
       if (s.contains("out_time=")){
@@ -143,8 +145,8 @@ public class Transcoder {
           streamsOut.getDest()
       );
     }
-    src = String.format("http://iptv1.yuvideo.net:4010/udp/%s", stream.getSource());
-    String in = String.format("ffmpeg -loglevel quiet -i %s %s -progress - ", src, codec);
+ //   src = String.format("http://iptv1.yuvideo.net:4010/udp/%s", stream.getSource());
+    String in = String.format("ffmpeg -loglevel quiet -i %s %s -progress - ", stream.getSource(), codec);
 
  //   System.out.println(in);
 

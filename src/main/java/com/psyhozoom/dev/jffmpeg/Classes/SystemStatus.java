@@ -3,38 +3,54 @@ package com.psyhozoom.dev.jffmpeg.Classes;
 
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Enumeration;
 import oshi.hardware.NetworkIF;
-import oshi.hardware.Networks;
-import oshi.hardware.platform.linux.LinuxNetworks;
-import sun.util.resources.cldr.en.CalendarData_en_MU;
 
 public class SystemStatus {
 
-  public static void getNetInfo(){
+  public static void getNetInfo() throws SocketException {
 
-    Enumeration<NetworkInterface> networkInterfaces = null;
+
+    NetworkIF networkIF = new NetworkIF();
+
+      networkIF.setNetworkInterface(NetworkInterface.getByIndex(2));
+
+      long in = 0;
+      long out = 0;
+
+        networkIF.updateAttributes();
+        in = networkIF.getBytesRecv();
+        out = networkIF.getBytesSent();
     try {
-      networkInterfaces = NetworkInterface.getNetworkInterfaces();
-    } catch (SocketException e) {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
       e.printStackTrace();
     }
+    networkIF.updateAttributes();
+    in = networkIF.getBytesRecv() - in;
+    out = networkIF.getBytesSent() - out;
 
 
-
-
-    for (NetworkInterface netIf : Collections.list(networkInterfaces)){
-      NetworkIF networkIF = new NetworkIF();
-      networkIF.setNetworkInterface(netIf);
-      networkIF.updateAttributes();
       String name = networkIF.getName();
-      Long in = networkIF.getBytesRecv();
-      Long out = networkIF.getBytesSent();
-
       String msg = String.format("Interface: %s, Bytes In: %d Out: %d", name, in, out);
       System.out.println(msg);
-    }
   }
 
+  public static void start() {
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        while (true){
+          try {
+            SystemStatus.getNetInfo();
+          } catch (SocketException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+    }).start();
+  }
 }

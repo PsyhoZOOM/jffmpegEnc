@@ -145,6 +145,7 @@ public class ServerWorker implements Runnable {
       case "startStream": {
         JSONObject object = new JSONObject();
         Streams streams = new Streams(db);
+        System.out.println(dataObj.toString());
         streams.startStream(dataObj.getInt("uniqueID"), this.db, streamThreads);
         if (streams.isError()) {
           object.put("ERROR", streams.getErrorMsg());
