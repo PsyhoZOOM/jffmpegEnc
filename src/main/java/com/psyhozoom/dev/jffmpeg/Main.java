@@ -12,7 +12,6 @@ public class Main {
     // "h264_nvenc","aac", "copy", "192k", "2000k", "udp://239.100.100.100:9000");
     // transcoder.startTranscoding();
 
-    SystemStatus.start();
     Server server = new Server();
     server.startServer();
 

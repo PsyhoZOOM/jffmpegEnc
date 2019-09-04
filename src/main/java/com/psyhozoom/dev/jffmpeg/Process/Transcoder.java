@@ -3,11 +3,9 @@ package com.psyhozoom.dev.jffmpeg.Process;
 import com.psyhozoom.dev.jffmpeg.Classes.FFLog;
 import com.psyhozoom.dev.jffmpeg.Classes.Streams;
 import com.psyhozoom.dev.jffmpeg.Classes.StreamsOut;
-import com.psyhozoom.dev.jffmpeg.Classes.SystemStatus;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.SocketException;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -21,6 +19,7 @@ public class Transcoder {
   private String[] messages = new String[50];
   private BooleanProperty running = new SimpleBooleanProperty(true);
   private FFLog ffLog = new FFLog();
+  private int pid = 0;
 
   public Transcoder() {
   }
@@ -36,7 +35,7 @@ public class Transcoder {
 
 
   public String getBitrate() {
-    return String.format("%s %s",ffLog.getBitrate(), ffLog.getTime());
+    return String.format("%s %s", ffLog.getBitrate(), ffLog.getTime());
   }
 
   public boolean startTranscoding(String params) {
@@ -46,18 +45,26 @@ public class Transcoder {
     int i = 0; //50 lines of messages
 
     try {
-      //    process = Runtime.getRuntime().exec(params);
-      //process = Runtime.getRuntime().exec("ffprobe http://iptv1.yuvideo.net:4010/udp/239.255.4.98:9008 ");
       processBuilder = new ProcessBuilder("bash", "-c", params);
       processBuilder.redirectErrorStream(true);
       process = processBuilder.start();
+
       input = new BufferedReader(new InputStreamReader(process.getInputStream()));
       String line;
 
+      String procesPID = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
 
-      while (process.isAlive()  || running.getValue()){
+      try {
+        this.pid = Integer.parseInt(procesPID.split("@")[0]);
 
-        if (!process.isAlive()){
+      }catch (Exception e){
+        System.out.println(0);
+      }
+
+
+      while (process.isAlive() || running.getValue()) {
+
+        if (!process.isAlive()) {
           running.setValue(false);
           break;
         }
@@ -66,16 +73,16 @@ public class Transcoder {
           i = 0;
         }
         messages[i] = line;
-       // System.out.println(line);
-        showLogBw(line);
+ //       showLogBw(line);
         i++;
       }
 
       running.setValue(false);
+
     } catch (IOException e) {
       running.setValue(false);
       e.printStackTrace();
-    }finally {
+    } finally {
       try {
         input.close();
         System.out.println(messages[i]);
@@ -87,14 +94,15 @@ public class Transcoder {
     return false;
   }
 
+
   private void showLogBw(String line) {
     String[] splited = line.split(" ");
-    for (String s : splited){
+    for (String s : splited) {
       if (s.contains("bitrate")) {
         System.out.println(s);
         this.ffLog.setBitrate(s);
       }
-      if (s.contains("out_time=")){
+      if (s.contains("out_time=")) {
         this.ffLog.setTime(s);
       }
     }
@@ -123,6 +131,10 @@ public class Transcoder {
     return messages;
   }
 
+  public int getPid() {
+    return this.pid;
+  }
+
   public void startTranscodingStream() {
     String src = stream.getSource();
     String codec = new String();
@@ -145,10 +157,11 @@ public class Transcoder {
           streamsOut.getDest()
       );
     }
- //   src = String.format("http://iptv1.yuvideo.net:4010/udp/%s", stream.getSource());
-    String in = String.format("ffmpeg -loglevel quiet -i %s %s -progress - ", stream.getSource(), codec);
+    //   src = String.format("http://iptv1.yuvideo.net:4010/udp/%s", stream.getSource());
+    String in = String
+        .format("ffmpeg -loglevel quiet -i %s %s -progress - ", stream.getSource(), codec);
 
- //   System.out.println(in);
+    //   System.out.println(in);
 
     Thread thread = new Thread(new Runnable() {
       @Override

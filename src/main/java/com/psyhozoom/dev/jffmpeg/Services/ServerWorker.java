@@ -4,7 +4,9 @@ import com.psyhozoom.dev.jffmpeg.Classes.Codecs;
 import com.psyhozoom.dev.jffmpeg.Classes.Database;
 import com.psyhozoom.dev.jffmpeg.Classes.Streams;
 import com.psyhozoom.dev.jffmpeg.Classes.StreamsOut;
+import com.psyhozoom.dev.jffmpeg.Classes.SystemStatus;
 import com.psyhozoom.dev.jffmpeg.Process.StreamThreads;
+import com.psyhozoom.dev.jffmpeg.model.ActiveStreams;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -18,6 +20,7 @@ public class ServerWorker implements Runnable {
   private final Socket socket;
   private final Database db;
   private final StreamThreads streamThreads;
+  private final SystemStatus systemStatus;
   private InputStreamReader isr;
   private BufferedReader bfr;
   private OutputStreamWriter osw;
@@ -27,11 +30,12 @@ public class ServerWorker implements Runnable {
   private JSONObject dataObj;
   private boolean isRunning = false;
 
-  public ServerWorker(Socket socket, StreamThreads streamThreads,
+  public ServerWorker(Socket socket, StreamThreads streamThreads, SystemStatus systemStatus,
       Database db) {
     this.socket = socket;
     this.db = db;
     this.streamThreads = streamThreads;
+    this.systemStatus = systemStatus;
     isRunning = true;
     initReaderWriter();
   }
@@ -69,6 +73,7 @@ public class ServerWorker implements Runnable {
     try {
       bfw.write(data.toString());
       bfw.newLine();
+      bfw.write("\n");
       bfw.flush();
     } catch (IOException e) {
       e.printStackTrace();
@@ -149,6 +154,8 @@ public class ServerWorker implements Runnable {
         streams.startStream(dataObj.getInt("uniqueID"), this.db, streamThreads);
         if (streams.isError()) {
           object.put("ERROR", streams.getErrorMsg());
+        }else{
+          object.put("MSG", "Stream started");
         }
         send(object);
         break;
@@ -160,6 +167,8 @@ public class ServerWorker implements Runnable {
         streams.stopStream(dataObj.getInt("uniqueID"), streamThreads);
         if (streams.isError()) {
           object.put("ERROR", streams.getErrorMsg());
+        }else{
+          object.put("MSG", "Stream stopped");
         }
         send(object);
         break;
@@ -198,6 +207,17 @@ public class ServerWorker implements Runnable {
 
       }
 
+      case "getSysInfo" : {
+        JSONObject object = new JSONObject();
+        object = systemStatus.getSysInfo();
+        if (systemStatus.isError()){
+          object.put("ERROR", systemStatus.getErrorMSG());
+        }
+
+        send(object);
+        break;
+      }
+
       case "updateStreamOut" : {
         JSONObject object = new JSONObject();
         Streams streams = new Streams(db);
@@ -205,6 +225,16 @@ public class ServerWorker implements Runnable {
         if (streams.isError())
           object.put("ERROR", streams.getErrorMsg());
 
+        send(object);
+        break;
+      }
+
+      case "getStatusOfStreams" : {
+        JSONObject object = new JSONObject();
+        object = streamThreads.getActiveStreams();
+        if (streamThreads.isError()){
+          object.put("ERROR", systemStatus.getErrorMSG());
+        }
         send(object);
         break;
       }
